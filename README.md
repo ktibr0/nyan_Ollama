@@ -1,3 +1,10 @@
+Измените подключение к локальному серверу с Ollama и название модели в:
+
+/nyan/openai.py (в двух местах)
+/nyan/topics.py - название модели
+/nyan/clusters.py - название модели
+
+
 # НЯН
 
 [![Tests Status](https://github.com/NyanNyanovich/nyan/actions/workflows/python.yml/badge.svg)](https://github.com/NyanNyanovich/nyan/actions/workflows/python.yml)
