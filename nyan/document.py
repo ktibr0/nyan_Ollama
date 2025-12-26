@@ -123,16 +123,19 @@ def read_annotated_documents_mongo(
     return annotated_docs, remaining_docs
 
 
+
 def write_annotated_documents_mongo(
     mongo_config_path: str, docs: List[Document]
 ) -> None:
     collection = get_annotated_documents_collection(mongo_config_path)
-
     indices = collection.index_information()
     if "url_1" not in indices:
-        collection.create_index([("url", 1)], name="url_1")
-
-    for doc in docs:
-        assert doc.embedding is not None
-        assert doc.patched_text is not None
-        collection.replace_one({"url": doc.url}, doc.asdict(), upsert=True)
+        collection.create_index([("url", 1)], name="url_1", unique=True)
+    
+    from pymongo import ReplaceOne
+    operations = [
+        ReplaceOne({"url": doc.url}, doc.asdict(), upsert=True)
+        for doc in docs
+    ]
+    if operations:
+        collection.bulk_write(operations, ordered=False)

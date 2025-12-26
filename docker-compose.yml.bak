@@ -30,11 +30,6 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - TZ=Europe/Moscow      
       - CUBLAS_WORKSPACE_CONFIG=:4096:8
-      - HF_HOME=/root/.cache/huggingface
-      - TRANSFORMERS_CACHE=/root/.cache/huggingface/hub
-      - HF_HUB_DISABLE_TELEMETRY=1
-
-
     extra_hosts:
       - "localhost:127.0.0.1"
     volumes:

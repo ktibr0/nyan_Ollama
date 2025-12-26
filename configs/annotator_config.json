@@ -2,7 +2,10 @@
     "embedder": {
         "model_name": "intfloat/multilingual-e5-base",
         "pooling_method": "mean",
+        "batch_size": 512,        
+		"use_fp16": true,  
         "text_prefix": "query: "
+		
     },
     "text_processor": {
         "rm_substrings": [
@@ -146,11 +149,16 @@
         ]
     },
     "image_processor": {
-        "rm_images": [
+		"enabled": false,      
+		"rm_images": [
             "https://iili.io/HYeukLg.md.jpg"
         ],
         "rm_threshold": 0.9
     },
+	
+	
+	
+
     "lang_detector": "models/lid.176.bin",
     "cat_detector": {
         "path": "models/multilingual_e5_base_cat_detect.joblib",

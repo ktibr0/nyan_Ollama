@@ -17,17 +17,28 @@ from nyan.tokenizer import Tokenizer
 
 class Annotator:
     def __init__(self, config_path: str, channels: Channels):
+        print("🚀 Starting Annotator init...")        
         assert isinstance(channels, Channels), "Wrong channels argument in Annotator"
         with open(config_path) as r:
             config = json.load(r)
 
+        print("📦 Loading Embedder...")
         self.embedder = Embedder(**config["embedder"])
+        print("✅ Embedder loaded!")
+        print("📝 Loading TextProcessor...")
         self.text_processor = TextProcessor(config["text_processor"])
+        print("✅ TextProcessor loaded!")
+        print("🔤 Loading Tokenizer...")
         self.tokenizer = Tokenizer(**config.get("tokenizer", {}))
-
-        self.image_processor = None
-        if "image_processor" in config:
+        print("✅ Tokenizer loaded!")
+        # self.image_processor = None
+        # if "image_processor" in config:
+            # self.image_processor = ImageProcessor(config["image_processor"])
+        print("🔤 Working image processor...")
+        self.image_processor = NullImageProcessor()
+        if "image_processor" in config and config["image_processor"].get("enabled", True):
             self.image_processor = ImageProcessor(config["image_processor"])
+
 
         self.lang_detector = None
         if "lang_detector" in config:
@@ -157,3 +168,17 @@ class Annotator:
             return doc
         doc.embedded_images = self.image_processor(list(doc.images))
         return doc
+
+
+
+class NullImageProcessor:
+    """
+    Заглушка для image pipeline.
+    Сохраняет контракт: возвращает пустой, но валидный результат.
+    """
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, images):
+        # ВАЖНО: возвращаем пустой список, а не None
+        return []

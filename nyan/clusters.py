@@ -150,6 +150,15 @@ class Cluster:
         if self.saved_diff is not None:
             return self.saved_diff
 
+        # ДО формирования prompt / messages  - чтобы удалять пустые diff, но работает непонятно, много кластеров не создается. 
+
+        # if len(self.docs) < 2:
+            # return []
+
+        # sources = {doc.source for doc in self.docs if doc.source}
+        # if len(sources) < 2:
+            # return []
+
         prompt_path: Path = BASE_DIR / "prompts/diff.txt"
         with open(prompt_path) as f:
             template = Template(f.read())
@@ -158,10 +167,32 @@ class Cluster:
 
         differences: List[Dict[str, Any]] = []
         try:
-            content = openai_completion(messages=messages, model_name="hf.co/IlyaGusev/saiga_nemo_12b_gguf:Q8_0")
+#            content = openai_completion(messages=messages, model_name="gpt-4o")
+            model_name = os.getenv("LLM_MODEL", "gpt-4o")            
+            content = openai_completion(messages=messages, model_name=model_name) 
             content = content[content.find("{") : content.rfind("}") + 1]
             parsed_content: Dict[str, List[Dict[str, Any]]] = json.loads(content)
             differences = parsed_content["differences"]
+
+
+            content = openai_completion(messages=messages, model_name=model_name)
+#- сделано для избежания ошибки неправильного (пустого diff), отключил, так как кластеры выпадают
+            # if not content or not content.strip():
+                # raise ValueError("Empty LLM response")
+
+            # start = content.find("{")
+            # end = content.rfind("}")
+
+            # if start == -1 or end == -1 or end <= start:
+                # raise ValueError(f"LLM response is not JSON: {content[:200]}")
+
+            # json_block = content[start : end + 1]
+            # parsed_content = json.loads(json_block)
+
+            # differences = parsed_content.get("differences", [])
+
+
+
 
             channel_titles = {doc.channel_id: doc.channel_title for doc in self.docs}
             doc_urls = {doc.channel_id: doc.url for doc in self.docs}
@@ -177,6 +208,9 @@ class Cluster:
             traceback.print_exc()
             differences = []
         return differences
+
+
+
 
     @property
     def annotation_doc(self) -> Document:
@@ -301,7 +335,20 @@ class Cluster:
         if first_doc_dict:
             cluster.saved_first_doc = Document.fromdict(first_doc_dict)
         cluster.saved_hash = d.get("hash")
-        cluster.saved_diff = d.get("diff", None)
+        #cluster.saved_diff = d.get("diff", None)
+        diff_value = d.get("diff", None)
+        if diff_value:
+            try:
+                # Если это строка - пытаемся распарсить
+                if isinstance(diff_value, str):
+                    cluster.saved_diff = json.loads(diff_value) if diff_value.strip() else None
+                else:
+                    cluster.saved_diff = diff_value
+            except (json.JSONDecodeError, ValueError):
+                print(f"Warning: Invalid diff in cluster from DB")
+                cluster.saved_diff = None
+        else:
+            cluster.saved_diff = None        
         cluster.is_important = d.get("is_important", False)
         cluster.create_time = d.get("create_time", None)
 

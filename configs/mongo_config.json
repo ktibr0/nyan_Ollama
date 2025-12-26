@@ -1,6 +1,6 @@
 {
     "client": {
-        "host": "localhost",
+        "host": "mongodb",
         "port": 27017
     },
     "database_name": "main",
